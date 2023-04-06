@@ -31,9 +31,10 @@ contract TicketPurchase is AccessControl{
     * @param _seat seat number
     */
     function purchaseTicket(bytes32 _flightId, uint256 _seat) external payable {
-        (, , uint256 seats, uint256 price) = flightManager.getFlightInfo(_flightId);
+        (uint256 depTime, , uint256 seats, uint256 price) = flightManager.getFlightInfo(_flightId);
 
         require(seats > 0, "Flight is not active");
+        require(block.timestamp < depTime, "Flight has already departed");
         require(_seat>0 && _seat<=seats, "Incorrect seat number");
         require(flightManager.isSeatAvailable(_flightId, _seat), "Seat is taken");
 

@@ -4,7 +4,6 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
 
-import "./interfaces/ITicketManager.sol";
 import "./interfaces/IFlightManager.sol";
 
 
@@ -40,6 +39,11 @@ contract TicketManager is AccessControl {
         uint256[] seats
     );
 
+    constructor(address _flightManager) {
+        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        flightManager = _flightManager;
+    }
+
     /**
     *@dev Stores info about the ticket, called by the PurchaseTicket contract
     *@param _buyer address of the buyer
@@ -61,7 +65,7 @@ contract TicketManager is AccessControl {
     }
 
     // @dev Check in a passenger, called by BoaringValidator contract
-    function checkIn(bytes32 _flightId, address _user) public onlyRole(DEFAULT_ADMIN_ROLE) {
+    function checkIn(bytes32 _flightId, address _user) external onlyRole(DEFAULT_ADMIN_ROLE) {
         require(canCheckIn(_user, _flightId), "Cannot check in");
 
         Ticket storage t = tickets[_user][_flightId];
@@ -95,5 +99,9 @@ contract TicketManager is AccessControl {
     // Checks if passenger has a ticket and if it's not too late to check in
     function canCheckIn(address _user, bytes32 _flightID) public view returns (bool) {
         return tickets[_user][_flightID].seats.length > 0 && IFlightManager(flightManager).canCheckIn(_flightID);
+    }
+
+    function setFlightManager(address _flightManager) external onlyRole(DEFAULT_ADMIN_ROLE){
+        flightManager = _flightManager;
     }
 }

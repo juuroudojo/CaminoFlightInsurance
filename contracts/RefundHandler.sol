@@ -3,12 +3,11 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import "./interfaces/ITicketManager.sol";
 import "./interfaces/IFlightManager.sol";
 import "./interfaces/ITicketPurchase.sol";
-
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract RefundHandler is AccessControl {
     ITicketManager ticketManager;
@@ -29,6 +28,10 @@ contract RefundHandler is AccessControl {
         flightManager = IFlightManager(_flightManager);
     }
 
+    /**
+    * @dev Called by FlightObserver compiling the data needed to handle the post flight refund
+    * @param _flightId flight id
+    */
     function handleRefund(bytes32 _flightId) external onlyRole(DEFAULT_ADMIN_ROLE) {
         (address[] memory p, uint price) = flightManager.getRefundInfo(_flightId);
         price = price * refundRate / 100;

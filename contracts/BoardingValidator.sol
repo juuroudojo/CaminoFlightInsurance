@@ -31,9 +31,8 @@ contract BoardingValidator is AccessControl {
     * @dev Passenger calls when boarding the plane, having previously checked in
     * @param _flightId flight id
     */
-    function validateBoardingPass(bytes32 _flightId) public returns(bool) {
+    function validateBoardingPass(bytes32 _flightId) public {
         ITicketManager(ticketManager).useTicket(_flightId, msg.sender);
-        return true;
     }
 
     /**

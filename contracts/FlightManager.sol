@@ -137,14 +137,6 @@ contract FlightManager is AccessControl {
             f.price
         );
     }
-
-    /**
-    * @dev View function to retrieve data needed for refund calculation
-    * @param _id flight id
-    * @return passengers array of passenger addresses
-    * @return price price of the ticket
-    */
-    
     /**
     * @dev View function to retrieve data needed for refund calculation
     * @param _id flight id
@@ -161,7 +153,8 @@ contract FlightManager is AccessControl {
     * @return true if check-in is enabled
     */
     function canCheckIn(bytes32 _flightId) external view returns (bool) {
-        return block.timestamp + 7200  >= flights[_flightId].departureTime;
+        // return (block.timestamp + 7200 >=flights[_flightId].departureTime && block.timestamp <= flights[_flightId].departureTime);
+        return block.timestamp <= flights[_flightId].departureTime;
     }
 }
 
