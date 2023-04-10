@@ -12,6 +12,7 @@ import {
   BoardingValidator,
   IERC165,
   FlightObserver,
+  IERC20,
 } from '../typechain';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 
@@ -47,12 +48,14 @@ describe('Flight Booking Contracts', function () {
   let ticketManager: TicketManager;
   let refundHandler: RefundHandler;
   let tokenDealer: TokenDealer;
+  let tokenDealerM: SignerWithAddress;
   let mockToken: MockToken;
   let boardingValidator: BoardingValidator;
   let user1: SignerWithAddress;
   let user2: SignerWithAddress;
   let owner: SignerWithAddress;
   let flightId: string;
+  let mockTokenM: SignerWithAddress;
 
   before(async function () {
     flightId = ethers.utils.formatBytes32String("JL1727");
@@ -73,13 +76,18 @@ describe('Flight Booking Contracts', function () {
 
     [owner, user1, user2] = await ethers.getSigners();
 
-    // DEPLOYINMENT
+    // DEPLOYMENT
 
     let mockTokenFactory = await ethers.getContractFactory('MockToken');
     mockToken = await mockTokenFactory.deploy('Mock Token', 'MOCK', ethers.utils.parseEther("50")) as MockToken;
 
+    // Instance of mock token to emulate calls.
+    mockTokenM = await getImpersonatedSigner(mockToken.address);
+
     let tokenDealerFactory = await ethers.getContractFactory('TokenDealer');
     tokenDealer = await tokenDealerFactory.deploy() as TokenDealer;
+
+    tokenDealerM = await getImpersonatedSigner(tokenDealer.address);
 
     let flightManagerFactory = await ethers.getContractFactory('FlightManager');
     flightManager = await flightManagerFactory.deploy() as FlightManager;
@@ -110,12 +118,16 @@ describe('Flight Booking Contracts', function () {
     await ticketManager.grantRole(await ticketManager.DEFAULT_ADMIN_ROLE(), refundHandler.address);
     await ticketManager.grantRole(await ticketManager.DEFAULT_ADMIN_ROLE(), boardingValidator.address);
 
+    await tokenDealer.grantRole(await tokenDealer.DEFAULT_ADMIN_ROLE(), ticketPurchase.address);
+    await tokenDealer.grantRole(await tokenDealer.DEFAULT_ADMIN_ROLE(), refundHandler.address);
+
+
     // await refundHandler.grantRole(await refundHandler.DEFAULT_ADMIN_ROLE(), flightObserver.address);
 
-
-    await tokenDealer.grantRole(await tokenDealer.DEFAULT_ADMIN_ROLE(), ticketPurchase.address);
-
     // ADDITIONAL SETUP
+    await refundHandler.setToken(mockToken.address);
+
+    //tokenDealer is a multisig
 
     // await ticketManager.setFlightManager(flightManager.address);
     // approve max uint
@@ -159,11 +171,11 @@ describe('Flight Booking Contracts', function () {
 
     it("Should pull the correct amount of funds", async() => {
       await flightManager.addFlight(flightId, "Dusseldorf", "Berlin", 1680747511, 1680747511, ethers.utils.parseEther("0.2"), 20)
-      let balanceBeforePurchase = await mockToken.balanceOf(ticketPurchase.address);
+      let balanceBeforePurchase = await mockToken.balanceOf(user1.address);
       await ticketPurchase.connect(user1).purchaseTicket(flightId, 5)
-      let balanceAfterPurchase = await mockToken.balanceOf(ticketPurchase.address);
+      let balanceAfterPurchase = await mockToken.balanceOf(user1.address);
 
-      expect(balanceAfterPurchase).to.equal(balanceBeforePurchase.add(ethers.utils.parseEther("0.2")))
+      expect(balanceAfterPurchase).to.equal(balanceBeforePurchase.sub(ethers.utils.parseEther("0.2")))
 
       console.log("Balance before purchase", balanceBeforePurchase.toString());
       console.log("Balance after purchase", balanceAfterPurchase.toString());
@@ -222,7 +234,31 @@ describe('Flight Booking Contracts', function () {
   });
 
   describe("Refund", async() => {
-    let flightId = ethers.utils.formatBytes32String("JL1727");
+    it("Should refund users", async() => {
+      let flightId = ethers.utils.formatBytes32String("JL1727");
+
+      // Airline side initiating the flight with the flight details
+      await flightManager.addFlight(flightId, "Dusseldorf", "Berlin", 1681758311, 1681858311, ethers.utils.parseEther("0.2"), 20)
+
+      // User side buying the ticket
+      await sendEth([tokenDealerM]);
+      await refundHandler.setTokenDealer(tokenDealerM.address);
+      await refundHandler.setToken(mockToken.address);
+      await refundHandler.setRefundRate(100)
+      await mockToken.connect(tokenDealerM).approve(ticketPurchase.address, ethers.constants.MaxUint256);
+      await mockToken.connect(tokenDealerM).approve(refundHandler.address, ethers.constants.MaxUint256);
+
+      await ticketPurchase.connect(user1).purchaseTicket(flightId, 5)
+
+      await boardingValidator.connect(user1).checkIn(flightId);
+      await boardingValidator.connect(user1).validateBoardingPass(flightId);
+
+      console.log("Balance before refund", (await mockToken.balanceOf(user1.address)).toString());
+      // mocked data to be called by the flightObserver
+      await refundHandler.handleRefund(flightId);
+
+      console.log("Balance after refund", (await mockToken.balanceOf(user1.address)).toString());
+    });
   });
   
 

@@ -9,10 +9,14 @@ import "./interfaces/ITicketManager.sol";
 import "./interfaces/IFlightManager.sol";
 import "./interfaces/ITicketPurchase.sol";
 
+import "hardhat/console.sol";
+
 contract RefundHandler is AccessControl {
     ITicketManager ticketManager;
     IFlightManager flightManager;
     ITicketPurchase ticketPurchase;
+
+    address token;
 
     event Refund(address indexed _to, uint256 _amount);
 
@@ -33,10 +37,13 @@ contract RefundHandler is AccessControl {
     * @param _flightId flight id
     */
     function handleRefund(bytes32 _flightId) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        (address[] memory p, uint price) = flightManager.getRefundInfo(_flightId);
+        (address[] memory p, uint256 price, uint256 sb) = flightManager.getRefundInfo(_flightId);
         price = price * refundRate / 100;
-        for (uint256 i = 0; i < p.length; i++) {
-            IERC20(ticketPurchase.token()).transferFrom(tokenDealer, p[i], price);
+        console.log("RefundHandler:handleRefund: price: %s", price);
+        console.log("Passengers:", sb);
+        console.log("Pss addr", p[0]);
+        for (uint256 i = 0; i < sb; i++) {
+            IERC20(token).transferFrom(tokenDealer, p[i], price);
 
             emit Refund(p[i], price);
         }
@@ -52,5 +59,13 @@ contract RefundHandler is AccessControl {
 
     function setFlightManager(address _flightManager) external onlyRole(DEFAULT_ADMIN_ROLE) {
         flightManager = IFlightManager(_flightManager);
+    }
+
+    function setToken(address _token) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        token = _token;
+    }
+
+    function setTokenDealer(address _tokenDealer) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        tokenDealer = _tokenDealer;
     }
 }

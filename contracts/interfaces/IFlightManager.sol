@@ -31,7 +31,8 @@ interface IFlightManager {
 
     function getRefundInfo(bytes32 _id) external view returns (
         address[] memory passengers,
-        uint256 price
+        uint256 price,
+        uint256 sb
     );
 
     function canCheckIn(bytes32 _flightId) external view returns (bool);

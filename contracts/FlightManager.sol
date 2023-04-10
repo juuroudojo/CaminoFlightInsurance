@@ -68,7 +68,9 @@ contract FlightManager is AccessControl {
     */
     function updateFlightInfo(bytes32 _id, uint256 _seat, address _passenger) onlyRole(DEFAULT_ADMIN_ROLE) external {
         seatTaken[_id][_seat] = true;
-        flights[_id].passengers.push(_passenger);
+        flights[_id].availableSeats--;
+        // XD
+        flights[_id].passengers[flights[_id].totalSeats - flights[_id].availableSeats - 1] = _passenger;
     }
 
     /** @dev View function to check if a flight is available
@@ -143,8 +145,8 @@ contract FlightManager is AccessControl {
     * @return passengers array of passenger addresses
     * @return price price of the ticket
     */
-    function getRefundInfo(bytes32 _id) external view returns (address[] memory, uint256 price) {
-        return (flights[_id].passengers, flights[_id].price);
+    function getRefundInfo(bytes32 _id) external view returns (address[] memory, uint256 price, uint256) {
+        return (flights[_id].passengers, flights[_id].price, flights[_id].totalSeats - flights[_id].availableSeats);
     }
 
     /**

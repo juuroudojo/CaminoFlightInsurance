@@ -16,6 +16,9 @@ contract TokenDealer is AccessControl{
     function withdraw(address _token, address _to, uint256 _amount) external onlyRole(DEFAULT_ADMIN_ROLE) {
         IERC20(_token).transfer(_to, _amount);
     }
+
+    receive() external payable {
+    }
 }
 
 
