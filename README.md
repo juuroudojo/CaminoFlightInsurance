@@ -1,6 +1,6 @@
 
 # HABA - Making Travel Industry Friendlier
-<img src=https://github.com/juuroudojo/images/blob/main/Shoemake_Hopf_small.png height = "75" />
+<img src=https://github.com/juuroudojo/images/blob/main/Shoemake_Hopf_small.png height = "200" />
 HABA is a blockchain-based infrastructure that aims to make the travel industry friendlier by revolutionizing the way airline tickets are purchased, managed, and validated. Our decentralized system provides a secure and transparent solution that eliminates inefficiencies, reduces costs, and enhances the overall travel experience for both airlines and travelers.
 
 The airline industry faces several challenges, including high fees, slow processes, lack of transparency, and fraudulent activities. Traditional ticket purchasing, management, and validation systems rely on intermediaries, leading to increased costs and complexities. Moreover, the insurance industry associated with travel often lacks transparency and trust, leading to disputes and delays in claim settlements.
