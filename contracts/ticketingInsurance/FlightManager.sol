@@ -6,6 +6,8 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
 
 contract FlightManager is AccessControl {
 
+    event FlightAdded(bytes32 _id, string _departureAirport, string _arrivalAirport, uint256 _departureTime, uint256 _arrivalTime, uint256 _price, uint256 _totalSeats);
+
     struct Flight {
         bytes32 id;
         string departureAirport;
@@ -58,6 +60,8 @@ contract FlightManager is AccessControl {
             _totalSeats,
             passengers
         );
+
+        emit FlightAdded(_id, _departureAirport, _arrivalAirport, _departureTime, _arrivalTime, _price, _totalSeats);
     }
 
     /**
