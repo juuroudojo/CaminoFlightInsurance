@@ -15,6 +15,8 @@ Repo explores the topic of parametric insurance, walks you through basic concept
 - Subscription-based parametric insurance with mocked oracle infrastrcture.
 - Subscription-based parametric insurance with mocked oracle infrastrcture and an interactive game-like component(The flight status is randomised after subscription, tokens and flights are permissionless).
 - Ticketing ecosystem using the data provided by ticket sales as a leverage for a parametric insurance system. This example discovers how parametric insurance can be an integrated feature within another project, not just a standalone product.
+
+
 ## Table of Contents
 
 1. [Introduction](#introduction)
@@ -28,6 +30,20 @@ Repo explores the topic of parametric insurance, walks you through basic concept
 ## Description
 
 Repo contains implementations of the following projects:
+
+## Project Structure and Mocking Details
+
+Given the complexity of the ecosystem, especially in the absence of required infrastructure for oracle-based parametric insurance functionality, certain components have been mocked and some logic is not representative of the final product. Here's a simplified overview of the system:
+
+| Component | Description |
+| --------- | ----------- |
+| Flights | All flights are assumed to already exist and are in progress. Any bytes32 value is an eligible flight ID. |
+| Flight Finalisation | Any user can initiate the finalisation of the flight, and the result will be randomized. |
+| Tokens | Tokens can be minted and used by anyone through interaction with MockToken.sol. |
+| Insurance Subscription | Calls to subscribe for insurance will initiate a chain of events that may result in a payout if the flight is cancelled or delayed. The process is instant if a payout is due. Status of the last finalized flight can be verified by calling `recentFlightStatus()` with the flightId as a parameter. |
+
+Additionally, the remaining repository is set to be deployed on testnet, with a focus on permission management. Certain interactions require specific roles which you can contact us to obtain. We recommend exploring our tests and the rest of the repository for a deeper understanding.
+
 
 
 ## Prerequisitess

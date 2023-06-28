@@ -24,11 +24,12 @@ The deployed ecosystem is a copy of Subscription-based parametric insurance with
 
 The rest of the repo is to be deployed on testnet, but the approach there is more heavily focused on permission management. The interactions there require some roles. (You can contact us to obtain roles for additional testing opportunities). You can also learn a lot by simply going through the tests & rest of the repo.
 
-The infrastructure presumes the following structure:
-- All the flights already exist and are in progress (Meaning any bytes32 value is an eligible flight ID)
-- Anyone can initiate the finalisation of the flight, the result will be randomised(in a very unsafe manner :d)
-- Tokens can be minted and used by anyone by interacting with MockToken.sol
-- The insurance subscription calls initiate a chain of events that will result in a payout if the flight is cancelled or delayed. All of it is executed in one call, so payout(if one is present) is instant. You can verify the status of the last finalised flight by calling recentFlightStatus() with flightId as a parameter. 
+### The infrastructure presumes the following structure:
+
+- ` All the flights already exist and are in progress (Meaning any bytes32 value is an eligible flight ID)`
+- `Anyone can initiate the finalisation of the flight, the result will be randomised(in a very unsafe manner :d)`
+- `Tokens can be minted and used by anyone by interacting with MockToken.sol`
+- `The insurance subscription calls initiate a chain of events that will result in a payout if the flight is cancelled or delayed. All of it is executed in one call, so payout(if one is present) is instant. You can verify the status of the last finalised flight by calling recentFlightStatus() with flightId as a parameter.`
 
 
 ## Mainnet deployment
