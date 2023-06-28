@@ -260,6 +260,4 @@ describe('Flight Booking Contracts', function () {
       console.log("Balance after refund", (await mockToken.balanceOf(user1.address)).toString());
     });
   });
-  
-
 });

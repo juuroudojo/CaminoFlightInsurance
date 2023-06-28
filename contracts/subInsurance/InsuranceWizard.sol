@@ -1,14 +1,15 @@
 // SPDX-Licnse-Identifier: MIT
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "../interfaces/IObserver.sol";
+import {IObserverSub} from "../interfaces/IObserverSub.sol";
 
 
-contract InsuranceDealer is AccessControl {
+contract InsuranceWizard is AccessControl {
     address public flightObserver;
+    address public refundHandler;
     address public token;
     // address of the multisig serving as treasury
     address public multisig; 
@@ -37,7 +38,7 @@ contract InsuranceDealer is AccessControl {
     struct Insurance {
         uint256 amount;
         uint256 subTier;
-        uint256 flightId;
+        bytes32 flightId;
         uint256 departureTime;
         uint256 arrivalTime;
         uint256 subscriptionTime;
@@ -45,12 +46,13 @@ contract InsuranceDealer is AccessControl {
 
     struct InsuranceTier {
         uint256 cancellationPayout;
-        uint256 delayPayout;
+        uint256 delayPayout; // per hour
         uint256 pricePct;
     }
 
     mapping (address => mapping(bytes32 => Insurance)) public insurances;
     mapping (uint256 => InsuranceTier) public insuranceTiers;
+    mapping(bytes32 => address[]) public flightSubscriptions;
 
     constructor() {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
@@ -68,12 +70,14 @@ contract InsuranceDealer is AccessControl {
         require(insuranceTiers[_subTier].pricePct > 0, "Invalid tier!");
 
         _amount += _amount * insuranceTiers[_subTier].pricePct / 100;
-        IERC20(token).transferFrom(msg.sender, multisig, _amount);
-        (uint256 depTime, uint256 arrTime) = IObserver(flightObserver).createRequest(_flightId);
+        IERC20(token).transferFrom(msg.sender, refundHandler, _amount);
 
         // handles non existing flights besides late subscriptions
-        require(block.timestamp + subThreshold < depTime, "Too late!");
-        insurances[msg.sender][_flightId] = Insurance(_amount, _subTier, _flightId, depTime, arrTime, block.timestamp);
+        // require(block.timestamp + subThreshold < depTime, "Too late!");
+        insurances[msg.sender][_flightId] = Insurance(_amount, _subTier, _flightId, 0, 0, block.timestamp);
+        flightSubscriptions[_flightId].push(msg.sender);
+        
+        IObserverSub(flightObserver).createRequest(_flightId);
     }
 
     /**
@@ -87,8 +91,16 @@ contract InsuranceDealer is AccessControl {
         require(block.timestamp + subThreshold < insurance.departureTime, "Too late!");
 
         uint256 payout = insurance.amount - calculateFee(insurance.amount, insurance.departureTime);
-        IERC20(token).transferFrom(multisig, msg.sender, payout);
+        IERC20(token).transfer(msg.sender, payout);
         delete insurances[msg.sender][_flightId];
+
+        for(uint256 i = 0; i < flightSubscriptions[_flightId].length; i++) {
+            if (flightSubscriptions[_flightId][i] == msg.sender) {
+                flightSubscriptions[_flightId][i] = flightSubscriptions[_flightId][flightSubscriptions[_flightId].length - 1];
+                flightSubscriptions[_flightId].pop();
+                break;
+            }
+        }
     }
 
     /**
@@ -103,6 +115,31 @@ contract InsuranceDealer is AccessControl {
     }
 
     /**
+    * @dev Calculates the payout for a delayed or cancelled flight by communicating with the info
+    * about ones subscription plan and insurance details.
+    * @param _user user address
+    * @param _flightId flight id
+    * @param status 0 for cancelled, 1 for delayed
+    * @param delay delay in seconds
+    */
+    function calculatePayout(address _user, bytes32 _flightId, uint256 status, uint256 delay) public view returns(uint256){
+        if (status == 0) {
+            uint256 tier = insurances[_user][_flightId].subTier;
+            uint256 amount = insurances[_user][_flightId].amount;
+            uint256 payout = amount + insuranceTiers[tier].cancellationPayout * amount / 100;
+            return payout;
+        } else if (status == 1) {
+            uint256 tier = insurances[_user][_flightId].subTier;
+            uint256 amount = insurances[_user][_flightId].amount;
+            uint256 hoursDelayed = delay / 3600;
+            uint256 payout = amount + insuranceTiers[tier].delayPayout * hoursDelayed * amount / 100;
+            return payout;
+        } else {
+            revert ("Invalid status!");
+        }
+    }
+
+    /**
     * @dev Previews the amount user receives if cancelling the insurance at the current time
     * @param _flightId flight id
     */
@@ -114,8 +151,13 @@ contract InsuranceDealer is AccessControl {
         return calculateFee(insurance.amount, insurance.departureTime) + insurance.amount;
     }
 
+    function getSubscribers(bytes32 _flightId) public view returns (address[] memory) {
+        // address[] memory subscribers = flightSubscriptions[_flightId];
+        return flightSubscriptions[_flightId];
+    }
+
     function setInsuranceTier(uint256 _subTier, uint256 _cancellationPayout, uint256 _delayPayout) public onlyRole(DEFAULT_ADMIN_ROLE) {
-        insuranceTiers[_subTier] = InsuranceTier(_cancellationPayout, _delayPayout, 0);
+        insuranceTiers[_subTier] = InsuranceTier(_cancellationPayout, _delayPayout, 50);
     }
 
     function setMultisig(address _multisig) public onlyRole(DEFAULT_ADMIN_ROLE) {
@@ -140,6 +182,10 @@ contract InsuranceDealer is AccessControl {
 
     function setFlightObserver(address _flightObserver) public onlyRole(DEFAULT_ADMIN_ROLE) {
         flightObserver = _flightObserver;
+    }
+
+    function setRefundHandler(address _refundHandler) public onlyRole(DEFAULT_ADMIN_ROLE) {
+        refundHandler = _refundHandler;
     }
         
 }

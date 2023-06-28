@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
 
-import "./interfaces/IFlightManager.sol";
+import "../interfaces/IFlightManager.sol";
 
 
 // Contract is called by PurchaseTicket contract.

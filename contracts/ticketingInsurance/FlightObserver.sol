@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.9;
 
 import "@chainlink/contracts/src/v0.8/ChainlinkClient.sol";
 
@@ -25,19 +25,19 @@ contract FlightObserver is ChainlinkClient {
         LINK = LinkTokenInterface(_link);
     }
 
-    // Function to check for delayed flights
-    function checkFlightStatus() external {
-        // API URL
-        string memory apiUrl = string(abi.encodePacked(FA_API_URL, flightId));
+    // // Function to check for delayed flights
+    // function checkFlightStatus() external {
+    //     // API URL
+    //     string memory apiUrl = string(abi.encodePacked(FA_API_URL, flightId));
 
-        // API request
-        Chainlink.Request memory request = buildChainlinkRequest(stringToBytes32("1"), address(this), this.fulfill.selector);
-        request.add("get", apiUrl);
-        request.add("headers", "Authorization", FA_API_KEY);
-        // NOTICE: Delay is in minutes
-        request.add("path", "flightStatus.delay");
-        sendChainlinkRequest(request, 1 * LINK);
-    }
+    //     // API request
+    //     Chainlink.Request memory request = buildChainlinkRequest(stringToBytes32("1"), address(this), this.fulfill.selector);
+    //     request.add("get", apiUrl);
+    //     request.add("headers", "Authorization", FA_API_KEY);
+    //     // NOTICE: Delay is in minutes
+    //     request.add("path", "flightStatus.delay");
+    //     sendChainlinkRequest(request, 1 * LINK);
+    // }
 
     // Receive the response from the Chainlink oracle
     function fulfill(bytes32 _requestId, uint256 _delay) public recordChainlinkFulfillment(_requestId) {

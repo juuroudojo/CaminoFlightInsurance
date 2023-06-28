@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.9;
 
-import "./interfaces/ITicketManager.sol";
-import "./interfaces/IFlightManager.sol";
+import "../interfaces/ITicketManager.sol";
+import "../interfaces/IFlightManager.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 

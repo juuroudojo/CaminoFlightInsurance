@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import "./interfaces/ITicketManager.sol";
-import "./interfaces/IFlightManager.sol";
-import "./interfaces/ITicketPurchase.sol";
+import "../interfaces/ITicketManager.sol";
+import "../interfaces/IFlightManager.sol";
+import "../interfaces/ITicketPurchase.sol";
 
 import "hardhat/console.sol";
 
-contract RefundHandler is AccessControl {
+contract RefundHandlerTicket is AccessControl {
     ITicketManager ticketManager;
     IFlightManager flightManager;
     ITicketPurchase ticketPurchase;
