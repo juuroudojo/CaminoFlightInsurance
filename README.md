@@ -6,7 +6,7 @@
 
 # Camino Parametric Insurance
 
-## [Deployment Guide](./DEPLOYMENT.md)
+## [Deployment Guide](https://github.com/juuroudojo/CaminoInsurance/blob/master/DEPLOYMENT.MD)
 
 
 Repo explores the topic of parametric insurance, walks you through basic concepts topic beholds, discovering solutions with defferent approaches and angles. The architecture description of each can be put down like this:
